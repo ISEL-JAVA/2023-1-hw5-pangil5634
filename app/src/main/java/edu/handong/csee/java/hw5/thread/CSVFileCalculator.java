@@ -235,7 +235,7 @@ public class CSVFileCalculator implements Runnable {
 	            double value = Double.parseDouble(data);
 	            double calculatedValue = 0.0;
 
-	            // 작업 이름(taskName)에 따라 계산을 수행합니다.
+
 	            switch (taskName) {
 	                case "MAX":
 	                    calculatedValue = Math.max(value, calculatedValue);
@@ -247,16 +247,16 @@ public class CSVFileCalculator implements Runnable {
 	                    calculatedValue = Math.sqrt(value);
 	                    break;
 	                default:
-	                    // 유효하지 않은 작업 이름이면 예외를 발생시킵니다.
+
 	                    throw new InvalidCommandException("Invalid task name: " + taskName);
 	            }
 
 	            result.add(Double.toString(calculatedValue));
 	        } catch (NumberFormatException e) {
-	            // 숫자로 변환할 수 없는 경우 예외를 발생시킵니다.
+
 	            throw new MyNumberFormatException("Invalid number format: " + data);
 	        } catch (Exception e) {
-	            // 그 외의 예외는 RuntimeException으로 처리합니다.
+
 	            throw new RuntimeException(e.getMessage());
 	        }
 	    }
