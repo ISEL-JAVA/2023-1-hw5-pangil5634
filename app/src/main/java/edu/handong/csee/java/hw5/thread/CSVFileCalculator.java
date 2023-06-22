@@ -105,7 +105,7 @@ public class CSVFileCalculator implements Runnable {
 	public void setA(ArrayList<ArrayList<String>> a) {
 		this.a = a;
 	}
-	
+
 	/**
 	 * This method is getter for setCsvFiles
 	 * 
@@ -124,10 +124,8 @@ public class CSVFileCalculator implements Runnable {
 		this.csvFiles = csvFiles;
 	}
 
-	
-	
-	//----------------------------------------------------------------------------------------------------------------
-	
+	// ----------------------------------------------------------------------------------------------------------------
+
 	/**
 	 * This method is that read data for csv files.
 	 * 
@@ -141,7 +139,6 @@ public class CSVFileCalculator implements Runnable {
 //		System.out.println(b);
 		a.add(calculate(b));
 
-
 		return a;
 	}
 
@@ -154,48 +151,47 @@ public class CSVFileCalculator implements Runnable {
 	public void writeCSV(String inputfilePath, String outputfilePath, ArrayList<ArrayList<String>> csvData,
 			int taskId) {
 
-		File file = new File(inputfilePath.substring(0, inputfilePath.length()-4) + "-" + outputfilePath);
+		File file = new File(inputfilePath.substring(0, inputfilePath.length() - 4) + "-" + outputfilePath);
 
 		System.out.println(file + ", " + csvData.get(taskId));
-		
+
 		OptionHandler OH = new OptionHandler();
 		try {
 
 			FileWriter fileWriter = new FileWriter(file);
 //			BufferedWriter bufWriter = new BufferedWriter(fileWriter);
-            CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
-			
+			CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
 
-			if(csvData.get(taskId).size()%FileManager.size == 0) {
+			if (csvData.get(taskId).size() % FileManager.size == 0) {
 				for (int i = 0; i < csvData.get(taskId).size(); i++) {
-					
-					if ((i +1) % (FileManager.size) == 0 && i != csvData.get(taskId).size() - 1) {
+
+					if ((i + 1) % (FileManager.size) == 0 && i != csvData.get(taskId).size() - 1) {
 						csvPrinter.printRecord(csvData.get(taskId).get(i));
 						fileWriter.write("\n");
 					} else {
 						csvPrinter.printRecord(csvData.get(taskId).get(i));
-						if(i != csvData.get(taskId).size()-1)
+						if (i != csvData.get(taskId).size() - 1)
 							fileWriter.write(",");
-	
+
 					}
 				}
 			} else {
 				for (int i = 0; i < csvData.get(taskId).size(); i++) {
-					
-					if ((i +1) % (FileManager.size+1) == 0 && i != csvData.get(taskId).size() - 1) {
-						if(i <= FileManager.size+1) {
-						csvPrinter.printRecord(csvData.get(taskId).get(i));
-						fileWriter.write("\n");
+
+					if ((i + 1) % (FileManager.size + 1) == 0 && i != csvData.get(taskId).size() - 1) {
+						if (i <= FileManager.size + 1) {
+							csvPrinter.printRecord(csvData.get(taskId).get(i));
+							fileWriter.write("\n");
 						} else {
 							csvPrinter.printRecord(csvData.get(taskId).get(i));
 							fileWriter.write("\n");
 						}
-					
+
 					} else {
 						csvPrinter.printRecord(csvData.get(taskId).get(i));
-						if(i != csvData.get(taskId).size()-1)
+						if (i != csvData.get(taskId).size() - 1)
 							fileWriter.write(",");
-	
+
 					}
 				}
 			}
@@ -228,40 +224,39 @@ public class CSVFileCalculator implements Runnable {
 	 * @param taskName
 	 */
 	public ArrayList<String> calculate(ArrayList<String> a1) {
-	    ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<String>();
 
-	    for (String data : a1) {
-	        try {
-	            double value = Double.parseDouble(data);
-	            double calculatedValue = 0.0;
+		for (String data : a1) {
+			try {
+				double value = Double.parseDouble(data);
+				double calculatedValue = 0.0;
 
+				switch (taskName) {
+				case "MAX":
+					calculatedValue = Math.max(value, calculatedValue);
+					break;
+				case "MIN":
+					calculatedValue = Math.min(value, calculatedValue);
+					break;
+				case "SQRT":
+					calculatedValue = Math.sqrt(value);
+					break;
+				default:
 
-	            switch (taskName) {
-	                case "MAX":
-	                    calculatedValue = Math.max(value, calculatedValue);
-	                    break;
-	                case "MIN":
-	                    calculatedValue = Math.min(value, calculatedValue);
-	                    break;
-	                case "SQRT":
-	                    calculatedValue = Math.sqrt(value);
-	                    break;
-	                default:
+					throw new InvalidCommandException("Invalid task name: " + taskName);
+				}
 
-	                    throw new InvalidCommandException("Invalid task name: " + taskName);
-	            }
+				result.add(Double.toString(calculatedValue));
+			} catch (NumberFormatException e) {
 
-	            result.add(Double.toString(calculatedValue));
-	        } catch (NumberFormatException e) {
+				throw new MyNumberFormatException("Invalid number format: " + data);
+			} catch (Exception e) {
 
-	            throw new MyNumberFormatException("Invalid number format: " + data);
-	        } catch (Exception e) {
+				throw new RuntimeException(e.getMessage());
+			}
+		}
 
-	            throw new RuntimeException(e.getMessage());
-	        }
-	    }
-
-	    return result;
+		return result;
 	}
 
 	/**
@@ -280,7 +275,6 @@ public class CSVFileCalculator implements Runnable {
 				}
 			}
 		}
-
 
 	}
 
