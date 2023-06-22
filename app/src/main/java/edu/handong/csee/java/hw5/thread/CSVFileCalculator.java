@@ -153,12 +153,7 @@ public class CSVFileCalculator implements Runnable {
 	 */
 	public void writeCSV(String inputfilePath, String outputfilePath, ArrayList<ArrayList<String>> csvData,
 			int taskId) {
-//		System.out.println(filePath);
-//		System.out.println(csvData);
-//		System.out.println(inputfilePath);
-//		System.out.println(outputfilePath);
-//		FileManager.writeAtxtFile(inputfilePath.substring(0, inputfilePath.length() - 4) + "-" + outputfilePath,
-//				csvData.get(taskId));
+
 		File file = new File(inputfilePath.substring(0, inputfilePath.length()-4) + "-" + outputfilePath);
 
 		System.out.println(file + ", " + csvData.get(taskId));
