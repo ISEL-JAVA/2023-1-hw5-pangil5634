@@ -5,7 +5,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.cli.Options;
@@ -17,7 +20,9 @@ import edu.handong.csee.java.hw5.exceptions.MyNumberFormatException;
 import edu.handong.csee.java.hw5.exceptions.NegativeNumberException;
 import edu.handong.csee.java.hw5.exceptions.OneInputException;
 import edu.handong.csee.java.hw5.fileutil.*;
+import edu.handong.csee.java.hw5.MyLinkedList;
 import edu.handong.csee.java.hw5.clioptions.*;
+
 
 /**
  * This class is the class to use when using at least two CSV files.
@@ -27,12 +32,13 @@ import edu.handong.csee.java.hw5.clioptions.*;
  */
 
 public class CSVFileCalculator implements Runnable {
+	
+
 
 	private String taskName;
 	private String inputPath;
 	private String outputPath;
-	private ArrayList<ArrayList<String>> a = new ArrayList<ArrayList<String>>();
-	private List<String> csvFiles = new ArrayList<>();
+	private MyLinkedList<ArrayList<String>> a = new MyLinkedList<ArrayList<String>>();
 
 	/**
 	 * The method is getter for TaskName
@@ -89,39 +95,21 @@ public class CSVFileCalculator implements Runnable {
 	}
 
 	/**
-	 * This method is getter for arrayList
+	 * This method is getter for MyLinkedList
 	 * 
 	 * @return
 	 */
-	public ArrayList<ArrayList<String>> getA() {
+	public MyLinkedList<ArrayList<String>> getA() {
 		return a;
 	}
 
 	/**
-	 * This method is setter for arrayList
+	 * This method is setter for MyLinkedList
 	 * 
 	 * @param a
 	 */
-	public void setA(ArrayList<ArrayList<String>> a) {
+	public void setA(MyLinkedList<ArrayList<String>> a) {
 		this.a = a;
-	}
-
-	/**
-	 * This method is getter for setCsvFiles
-	 * 
-	 * @return
-	 */
-	public List<String> getCsvFiles() {
-		return csvFiles;
-	}
-
-	/**
-	 * This method is setter for setCsvFiles
-	 * 
-	 * @param csvFiles
-	 */
-	public void setCsvFiles(List<String> csvFiles) {
-		this.csvFiles = csvFiles;
 	}
 
 	// ----------------------------------------------------------------------------------------------------------------
@@ -130,15 +118,41 @@ public class CSVFileCalculator implements Runnable {
 	 * This method is that read data for csv files.
 	 * 
 	 * @param filePath
-	 * @return ArrayList<ArrayList<String>>
+	 * @return MyLinkedList<MyLinkedList<String>>
 	 */
-	public ArrayList<ArrayList<String>> readCSV(String filePath) {
+	public MyLinkedList<ArrayList<String>> readCSV(String filePath) {
 
-		ArrayList<String> b = FileManager.readLinesFromAtxtFile(filePath);
+		try {
+			Reader reader = Files.newBufferedReader(Paths.get(filePath));
+			CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
+			int count = 0;
 
-//		System.out.println(b);
-		a.add(calculate(b));
+			for (CSVRecord csvRecord : csvParser) {
+//				MyLinkedList<String> sublist = new MyLinkedList<>(Arrays.asList(csvRecord.values()));
+				ArrayList<String> sublist = new ArrayList<String>();
+//			    System.out.println(csvRecord);
+				
+				for(int i = 0; i < csvRecord.values().length; i++) {
+					sublist.add(csvRecord.get(i));
 
+				}
+//				System.out.println(sublist);
+//			    for (String value : csvRecord.values()) {
+//			        sublist.addANodeToTail(value);
+//			    }
+
+//				System.out.println(sublist instanceof ArrayList);
+			    a.addANodeToTail(sublist);
+
+//				a.add(sublist);
+
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			return null;
+		}
+//		System.out.println(a);
+//	    System.out.println(a.getValueAt(1));
 		return a;
 	}
 
@@ -147,60 +161,105 @@ public class CSVFileCalculator implements Runnable {
 	 * 
 	 * @param filePath
 	 * @param csvData
+	 * @throws IOException
+	 * @throws OneInputException
+	 * @throws NegativeNumberException
+	 * @throws InvalidCommandException
+	 * @throws MinimumInputNumberException
+	 * @throws MyNumberFormatException
+	 * @throws IndexOutOfBoundsException
 	 */
-	public void writeCSV(String inputfilePath, String outputfilePath, ArrayList<ArrayList<String>> csvData,
-			int taskId) {
-
-		File file = new File(inputfilePath.substring(0, inputfilePath.length() - 4) + "-" + outputfilePath);
-
-		System.out.println(file + ", " + csvData.get(taskId));
-
-		OptionHandler OH = new OptionHandler();
+	public void writeCSV(String filePath, MyLinkedList<ArrayList<String>> csvData)
+			throws IOException, MyNumberFormatException, MinimumInputNumberException, InvalidCommandException,
+			NegativeNumberException, OneInputException {
 		try {
+			if (csvData.getValueAt(0) == null) {
+				System.out.println();
+			}
+		} catch (IndexOutOfBoundsException e) {
+			Thread.currentThread().interrupt();
+			return;
+		}
+		String fileName = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.indexOf(".csv"));
+
+		int startIndex = outputPath.lastIndexOf("/");
+		StringBuffer sb = new StringBuffer();
+		sb.append(outputPath);
+		if (startIndex > -1) {
+			outputPath = sb.insert(startIndex + 1, fileName + "-").toString();
+		} else {
+			outputPath = sb.insert(0, fileName + "-").toString();
+		}
+		
+
+
+
+//		System.out.println("before : " + csvData);
+//		System.out.println("after : " + csvData);
+
+		if (taskName.equals("SQRT")) {
+			csvData = calculate(csvData);
+			File file = new File(outputPath);
+
 
 			FileWriter fileWriter = new FileWriter(file);
-//			BufferedWriter bufWriter = new BufferedWriter(fileWriter);
+			BufferedWriter bufWriter = new BufferedWriter(fileWriter);
 			CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
-
-			if (csvData.get(taskId).size() % FileManager.size == 0) {
-				for (int i = 0; i < csvData.get(taskId).size(); i++) {
-
-					if ((i + 1) % (FileManager.size) == 0 && i != csvData.get(taskId).size() - 1) {
-						csvPrinter.printRecord(csvData.get(taskId).get(i));
-						fileWriter.write("\n");
-					} else {
-						csvPrinter.printRecord(csvData.get(taskId).get(i));
-						if (i != csvData.get(taskId).size() - 1)
-							fileWriter.write(",");
-
-					}
-				}
-			} else {
-				for (int i = 0; i < csvData.get(taskId).size(); i++) {
-
-					if ((i + 1) % (FileManager.size + 1) == 0 && i != csvData.get(taskId).size() - 1) {
-						if (i <= FileManager.size + 1) {
-							csvPrinter.printRecord(csvData.get(taskId).get(i));
-							fileWriter.write("\n");
-						} else {
-							csvPrinter.printRecord(csvData.get(taskId).get(i));
-							fileWriter.write("\n");
-						}
-
-					} else {
-						csvPrinter.printRecord(csvData.get(taskId).get(i));
-						if (i != csvData.get(taskId).size() - 1)
-							fileWriter.write(",");
-
-					}
+			
+			String temp1 = "";
+			
+			for(int j = 0; j < csvData.getValueAt(0).size(); j++) {
+				temp1 = temp1 + csvData.getValueAt(0).get(j);
+				if(j == csvData.getValueAt(0).size()-1) {
+					temp1 = temp1 + "\n";
+				} else {
+					temp1 = temp1 + ", ";
 				}
 			}
-			fileWriter.write("\n");
+			System.out.println(temp1);
+//			fileWriter.write(String.join(",", csvData.getValueAt(0)) + "\n");
+			fileWriter.write(temp1);
+			for (int i = 1; i < csvData.length(); i++) {
+				csvPrinter.printRecord(csvData.getValueAt(i));
+			}
 
-			fileWriter.flush();
 			fileWriter.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} else {
+			try {
+				if (taskName.equals("MIN")) {
+					csvData.getValueAt(0).add("MIN");
+				} else if (taskName.equals("MAX")) {
+
+					csvData.getValueAt(0).add("MAX");
+				}
+			} catch (IndexOutOfBoundsException e) {
+				Thread.currentThread().interrupt();
+				return;
+			}
+			csvData = calculate(csvData);
+			File file = new File(outputPath);
+
+			FileWriter fileWriter = new FileWriter(file);
+			BufferedWriter bufWriter = new BufferedWriter(fileWriter);
+			CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
+			
+			String temp2 = "";
+			for(int j = 0; j < csvData.getValueAt(0).size(); j++) {
+				temp2 = temp2 + csvData.getValueAt(0).get(j);
+				if(j == csvData.getValueAt(0).size()-1) {
+					temp2 = temp2 + "\n";
+				} else {
+					temp2 = temp2 + ", ";
+				}
+
+			}
+			fileWriter.write(temp2);
+//			fileWriter.write(String.join(",", csvData.getValueAt(0)) + "\n");
+			for (int i = 1; i < csvData.length(); i++) {
+
+				csvPrinter.printRecord(csvData.getValueAt(i));
+			}
+			fileWriter.close();
 		}
 
 	}
@@ -212,7 +271,7 @@ public class CSVFileCalculator implements Runnable {
 	 * @param outputPath
 	 * @param taskName
 	 */
-	public CSVFileCalculator(String inputPath, String outputPath, String taskName) {
+	public CSVFileCalculator(String taskName, String inputPath, String outputPath) {
 		this.taskName = taskName;
 		this.inputPath = inputPath;
 		this.outputPath = outputPath;
@@ -222,41 +281,134 @@ public class CSVFileCalculator implements Runnable {
 	 * This method is that calculate for MAX, MIN, SQRT
 	 * 
 	 * @param taskName
+	 * @throws OneInputException
+	 * @throws NegativeNumberException
+	 * @throws InvalidCommandException
+	 * @throws MinimumInputNumberException
+	 * @throws MyNumberFormatException
 	 */
-	public ArrayList<String> calculate(ArrayList<String> a1) {
-		ArrayList<String> result = new ArrayList<String>();
+	public MyLinkedList<ArrayList<String>> calculate(MyLinkedList<ArrayList<String>> a1) throws MyNumberFormatException,
+			MinimumInputNumberException, InvalidCommandException, NegativeNumberException, OneInputException {
+		Computable engine = null;
 
-		for (String data : a1) {
+		if (taskName.toUpperCase().equals("SQRT")) {
 			try {
-				double value = Double.parseDouble(data);
-				double calculatedValue = 0.0;
+				if (a1.getValueAt(1) == null) {
+					System.out.println();
+				}
+			} catch (IndexOutOfBoundsException e) {
+				throw new OneInputException("Exception-04: You need one input value for " + taskName.toUpperCase() + ".");
 
-				switch (taskName) {
-				case "MAX":
-					calculatedValue = Math.max(value, calculatedValue);
-					break;
-				case "MIN":
-					calculatedValue = Math.min(value, calculatedValue);
-					break;
-				case "SQRT":
-					calculatedValue = Math.sqrt(value);
-					break;
-				default:
+			}
+			engine = new SQRTEngine();
+//			for(ArrayList<String> data : a1) {
 
-					throw new InvalidCommandException("Invalid task name: " + taskName);
+			for (int i = 1; i < a1.length(); i++) {
+
+				ArrayList<String> result = new ArrayList<String>();
+
+//				for (String d1 : a1.getValueAt(i)) {
+				for(int j = 0; j < a1.getValueAt(i).size(); j++) {
+					String d1 = a1.getValueAt(i).get(j);
+
+					Double calculatedValue = 0.0;
+					String[] temp = new String[1];
+
+					temp[0] = d1;
+
+					if (!temp[0].matches("[+-]?\\d*(\\.\\d+)?")) {
+						throw new MyNumberFormatException(
+								"Exception-05: The input value should be converted into a number. (" + temp[0]
+										+ " is not a number value for " + taskName + ".)");
+					}
+
+					engine.setInput(temp);
+					engine.compute();
+					calculatedValue = engine.getResult();
+////					calculatedValue = Math.sqrt((double)value);
+					result.add(calculatedValue.toString());
+				}
+				a1.setValueAt(i, result);
+			}
+
+		} else if (taskName.toUpperCase().equals("MAX") || taskName.toUpperCase().equals("MIN")) {
+			try {
+				if (a1.getValueAt(1) == null) {
+					System.out.println();
+				}
+			} catch (IndexOutOfBoundsException e) {
+				throw new MinimumInputNumberException(
+						"Exception-02: You need at least " + 2 + " input values for " + taskName.toUpperCase() + ".");
+
+			}
+			if (taskName.toUpperCase().equals("MAX"))
+				engine = new MaxEngine();
+			else if (taskName.toUpperCase().equals("MIN"))
+				engine = new MinEngine();
+
+			for (int i = 1; i < a1.length(); i++) {
+
+				int arrayListSize = a1.getValueAt(i).size();
+
+				String[] temp = new String[arrayListSize];
+
+				int count = 0;
+//				for (String d1 : a1.getValueAt(i)) {
+				for(int j = 0; j < a1.getValueAt(i).size(); j++) {
+					String d1 = a1.getValueAt(i).get(j);
+					temp[count] = d1;
+					count++;
+				}
+				for (int j = 0; j < a1.getValueAt(i).size(); j++) {
+					if (!temp[j].matches("[+-]?\\d*(\\.\\d+)?")) {
+						throw new MyNumberFormatException(
+								"Exception-05: The input value should be converted into a number. (" + temp[j]
+										+ " is not a number value for " + taskName + ".)");
+					}
+
 				}
 
-				result.add(Double.toString(calculatedValue));
-			} catch (NumberFormatException e) {
+				engine.setInput(temp);
+				engine.compute();
+				int engineResult = (int) engine.getResult();
 
-				throw new MyNumberFormatException("Invalid number format: " + data);
-			} catch (Exception e) {
+				a1.getValueAt(i).add(engineResult + "");
 
-				throw new RuntimeException(e.getMessage());
 			}
 		}
+//		ArrayList<String> result = new ArrayList<String>();
+//
+//		for (String data : a1) {
+//			try {
+//				double value = Double.parseDouble(data);
+//				double calculatedValue = 0.0;
+//
+//				switch (taskName) {
+//				case "MAX":
+//					calculatedValue = Math.max(value, calculatedValue);
+//					break;
+//				case "MIN":
+//					calculatedValue = Math.min(value, calculatedValue);
+//					break;
+//				case "SQRT":
+//					calculatedValue = Math.sqrt(value);
+//					break;
+//				default:
+//
+//					throw new InvalidCommandException("Invalid task name: " + taskName);
+//				}
+//
+//				result.add(Double.toString(calculatedValue));
+//			} catch (NumberFormatException e) {
+//
+//				throw new MyNumberFormatException("Invalid number format: " + data);
+//			} catch (Exception e) {
+//
+//				throw new RuntimeException(e.getMessage());
+//			}
+//		}
 
-		return result;
+		return a1;
 	}
 
 	/**
@@ -265,17 +417,14 @@ public class CSVFileCalculator implements Runnable {
 	@Override
 	public void run() {
 
-		File folder = new File(inputPath);
-		File[] files = folder.listFiles();
+		try {
+			writeCSV(inputPath, readCSV(inputPath));
+		} catch (OneInputException | NegativeNumberException | InvalidCommandException | MinimumInputNumberException
+				| MyNumberFormatException | IOException e) {
 
-		if (files != null) {
-			for (File file : files) {
-				if (file.isFile() && file.getName().endsWith(".csv")) {
-					csvFiles.add(file.getPath());
-				}
-			}
+			String message = e.getMessage();
+			System.out.println(message);
 		}
-
 	}
 
 }
