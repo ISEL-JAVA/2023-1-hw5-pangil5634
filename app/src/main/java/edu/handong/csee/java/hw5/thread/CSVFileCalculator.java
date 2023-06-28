@@ -38,7 +38,7 @@ public class CSVFileCalculator implements Runnable {
 	private String taskName;
 	private String inputPath;
 	private String outputPath;
-	private MyLinkedList<ArrayList<String>> a = new MyLinkedList<ArrayList<String>>();
+	private MyLinkedList<MyLinkedList<String>> a = new MyLinkedList<MyLinkedList<String>>();
 
 	/**
 	 * The method is getter for TaskName
@@ -99,7 +99,7 @@ public class CSVFileCalculator implements Runnable {
 	 * 
 	 * @return
 	 */
-	public MyLinkedList<ArrayList<String>> getA() {
+	public MyLinkedList<MyLinkedList<String>> getA() {
 		return a;
 	}
 
@@ -108,7 +108,7 @@ public class CSVFileCalculator implements Runnable {
 	 * 
 	 * @param a
 	 */
-	public void setA(MyLinkedList<ArrayList<String>> a) {
+	public void setA(MyLinkedList<MyLinkedList<String>> a) {
 		this.a = a;
 	}
 
@@ -120,7 +120,7 @@ public class CSVFileCalculator implements Runnable {
 	 * @param filePath
 	 * @return MyLinkedList<MyLinkedList<String>>
 	 */
-	public MyLinkedList<ArrayList<String>> readCSV(String filePath) {
+	public MyLinkedList<MyLinkedList<String>> readCSV(String filePath) {
 
 		try {
 			Reader reader = Files.newBufferedReader(Paths.get(filePath));
@@ -129,14 +129,14 @@ public class CSVFileCalculator implements Runnable {
 
 			for (CSVRecord csvRecord : csvParser) {
 //				MyLinkedList<String> sublist = new MyLinkedList<>(Arrays.asList(csvRecord.values()));
-				ArrayList<String> sublist = new ArrayList<String>();
+				MyLinkedList<String> sublist = new MyLinkedList<String>();
 //			    System.out.println(csvRecord);
 				
 				for(int i = 0; i < csvRecord.values().length; i++) {
-					sublist.add(csvRecord.get(i));
+					sublist.addANodeToTail(csvRecord.get(i));
 
 				}
-//				System.out.println(sublist);
+				
 //			    for (String value : csvRecord.values()) {
 //			        sublist.addANodeToTail(value);
 //			    }
@@ -169,7 +169,7 @@ public class CSVFileCalculator implements Runnable {
 	 * @throws MyNumberFormatException
 	 * @throws IndexOutOfBoundsException
 	 */
-	public void writeCSV(String filePath, MyLinkedList<ArrayList<String>> csvData)
+	public void writeCSV(String filePath, MyLinkedList<MyLinkedList<String>> csvData)
 			throws IOException, MyNumberFormatException, MinimumInputNumberException, InvalidCommandException,
 			NegativeNumberException, OneInputException {
 		try {
@@ -208,29 +208,49 @@ public class CSVFileCalculator implements Runnable {
 			
 			String temp1 = "";
 			
-			for(int j = 0; j < csvData.getValueAt(0).size(); j++) {
-				temp1 = temp1 + csvData.getValueAt(0).get(j);
-				if(j == csvData.getValueAt(0).size()-1) {
+			for(int j = 0; j < csvData.getValueAt(0).length(); j++) {
+				temp1 = temp1 + csvData.getValueAt(0).getValueAt(j);
+				if(j == csvData.getValueAt(0).length()-1) {
 					temp1 = temp1 + "\n";
 				} else {
 					temp1 = temp1 + ", ";
 				}
 			}
-			System.out.println(temp1);
+//			System.out.println(temp1);
 //			fileWriter.write(String.join(",", csvData.getValueAt(0)) + "\n");
 			fileWriter.write(temp1);
-			for (int i = 1; i < csvData.length(); i++) {
-				csvPrinter.printRecord(csvData.getValueAt(i));
-			}
+			temp1 = "";
+			
+//			for ( int i = 1; i < csvData.length(); i++) {
+//				for(int j = 0; j < csvData.getValueAt(i).length(); j++) {
+//					temp1 = temp1 + csvData.getValueAt(i).getValueAt(j);
+//					if(j == csvData.getValueAt(0).length()-1) {
+//						temp1 = temp1 + "\n";
+//					} else {
+//						temp1 = temp1 + ", ";
+//					}
+//				}
+//				csvPrinter.printRecord(temp1);
+//			}
 
+			for ( int i = 1; i < csvData.length(); i++) {
+				for(int j = 0; j < csvData.getValueAt(i).length(); j++) {
+					csvPrinter.print(csvData.getValueAt(i).getValueAt(j));
+					if(j == csvData.getValueAt(i).length()-1) {
+//						fileWriter.write("\n");
+						csvPrinter.printRecord();
+					} 
+				}
+
+			}
 			fileWriter.close();
 		} else {
 			try {
 				if (taskName.equals("MIN")) {
-					csvData.getValueAt(0).add("MIN");
+					csvData.getValueAt(0).addANodeToTail("MIN");
 				} else if (taskName.equals("MAX")) {
 
-					csvData.getValueAt(0).add("MAX");
+					csvData.getValueAt(0).addANodeToTail("MAX");
 				}
 			} catch (IndexOutOfBoundsException e) {
 				Thread.currentThread().interrupt();
@@ -244,9 +264,9 @@ public class CSVFileCalculator implements Runnable {
 			CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
 			
 			String temp2 = "";
-			for(int j = 0; j < csvData.getValueAt(0).size(); j++) {
-				temp2 = temp2 + csvData.getValueAt(0).get(j);
-				if(j == csvData.getValueAt(0).size()-1) {
+			for(int j = 0; j < csvData.getValueAt(0).length(); j++) {
+				temp2 = temp2 + csvData.getValueAt(0).getValueAt(j);
+				if(j == csvData.getValueAt(0).length()-1) {
 					temp2 = temp2 + "\n";
 				} else {
 					temp2 = temp2 + ", ";
@@ -255,9 +275,19 @@ public class CSVFileCalculator implements Runnable {
 			}
 			fileWriter.write(temp2);
 //			fileWriter.write(String.join(",", csvData.getValueAt(0)) + "\n");
-			for (int i = 1; i < csvData.length(); i++) {
+//			for (int i = 1; i < csvData.length(); i++) {
+//
+//				csvPrinter.printRecord(csvData.getValueAt(i));
+//			}
+			for ( int i = 1; i < csvData.length(); i++) {
+				for(int j = 0; j < csvData.getValueAt(i).length(); j++) {
+					csvPrinter.print(csvData.getValueAt(i).getValueAt(j));
+					if(j == csvData.getValueAt(i).length()-1) {
+//						fileWriter.write("\n");
+						csvPrinter.printRecord();
+					} 
+				}
 
-				csvPrinter.printRecord(csvData.getValueAt(i));
 			}
 			fileWriter.close();
 		}
@@ -287,14 +317,14 @@ public class CSVFileCalculator implements Runnable {
 	 * @throws MinimumInputNumberException
 	 * @throws MyNumberFormatException
 	 */
-	public MyLinkedList<ArrayList<String>> calculate(MyLinkedList<ArrayList<String>> a1) throws MyNumberFormatException,
+	public MyLinkedList<MyLinkedList<String>> calculate(MyLinkedList<MyLinkedList<String>> a1) throws MyNumberFormatException,
 			MinimumInputNumberException, InvalidCommandException, NegativeNumberException, OneInputException {
 		Computable engine = null;
 
-		if (taskName.toUpperCase().equals("SQRT")) {
+		if (taskName.toUpperCase().equals("SQRT")) {   
 			try {
 				if (a1.getValueAt(1) == null) {
-					System.out.println();
+					System.out.println(); 
 				}
 			} catch (IndexOutOfBoundsException e) {
 				throw new OneInputException("Exception-04: You need one input value for " + taskName.toUpperCase() + ".");
@@ -302,33 +332,39 @@ public class CSVFileCalculator implements Runnable {
 			}
 			engine = new SQRTEngine();
 //			for(ArrayList<String> data : a1) {
-
+		
 			for (int i = 1; i < a1.length(); i++) {
 
-				ArrayList<String> result = new ArrayList<String>();
+				MyLinkedList<String> result = new MyLinkedList<String>();
 
 //				for (String d1 : a1.getValueAt(i)) {
-				for(int j = 0; j < a1.getValueAt(i).size(); j++) {
-					String d1 = a1.getValueAt(i).get(j);
+				for(int j = 0; j < a1.getValueAt(i).length(); j++) {
+					String d1 = a1.getValueAt(i).getValueAt(j);
 
 					Double calculatedValue = 0.0;
 					String[] temp = new String[1];
-
+					
+					
 					temp[0] = d1;
-
 					if (!temp[0].matches("[+-]?\\d*(\\.\\d+)?")) {
 						throw new MyNumberFormatException(
 								"Exception-05: The input value should be converted into a number. (" + temp[0]
 										+ " is not a number value for " + taskName + ".)");
 					}
-
+					
 					engine.setInput(temp);
 					engine.compute();
 					calculatedValue = engine.getResult();
 ////					calculatedValue = Math.sqrt((double)value);
-					result.add(calculatedValue.toString());
+					result.addANodeToTail(calculatedValue.toString());
 				}
+//				System.out.println(result);
+//				for(int k = 0; k < result.length(); k++) {
+//					System.out.println(result.getValueAt(k));
+//				}
 				a1.setValueAt(i, result);
+
+			
 			}
 
 		} else if (taskName.toUpperCase().equals("MAX") || taskName.toUpperCase().equals("MIN")) {
@@ -348,18 +384,18 @@ public class CSVFileCalculator implements Runnable {
 
 			for (int i = 1; i < a1.length(); i++) {
 
-				int arrayListSize = a1.getValueAt(i).size();
+				int arrayListSize = a1.getValueAt(i).length();
 
 				String[] temp = new String[arrayListSize];
 
 				int count = 0;
 //				for (String d1 : a1.getValueAt(i)) {
-				for(int j = 0; j < a1.getValueAt(i).size(); j++) {
-					String d1 = a1.getValueAt(i).get(j);
+				for(int j = 0; j < a1.getValueAt(i).length(); j++) {
+					String d1 = a1.getValueAt(i).getValueAt(j);
 					temp[count] = d1;
 					count++;
 				}
-				for (int j = 0; j < a1.getValueAt(i).size(); j++) {
+				for (int j = 0; j < a1.getValueAt(i).length(); j++) {
 					if (!temp[j].matches("[+-]?\\d*(\\.\\d+)?")) {
 						throw new MyNumberFormatException(
 								"Exception-05: The input value should be converted into a number. (" + temp[j]
@@ -372,7 +408,7 @@ public class CSVFileCalculator implements Runnable {
 				engine.compute();
 				int engineResult = (int) engine.getResult();
 
-				a1.getValueAt(i).add(engineResult + "");
+				a1.getValueAt(i).addANodeToTail(engineResult + "");
 
 			}
 		}

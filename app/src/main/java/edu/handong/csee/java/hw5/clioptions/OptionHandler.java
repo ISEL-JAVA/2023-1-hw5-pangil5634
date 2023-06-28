@@ -156,11 +156,11 @@ public class OptionHandler {
 
 		// add options by using OptionBuilder
 		options.addOption(Option.builder("i").longOpt("ipath")
-				.desc("Set a path for a data input file. It must work with -t SQRT and -o options together. e.g., "
+				.desc("Set a path for a data input file. It must work with -t SQRT, -t MAX, or -t MIN and -o options together. e.g., "
 						+ "-t SQRT -i file.csv -o "
 						+ "output.csv")
 				.hasArg()
-				.argName("A data file path to read")
+				.argName("A data file/directory path to read")
 				// .required()
 				.build());
 
@@ -216,6 +216,7 @@ public class OptionHandler {
 			helpRequested = cmd.hasOption("h");
 
 		} catch (Exception e) {
+
 			printHelp(options);
 			return false;
 		}
@@ -234,7 +235,7 @@ public class OptionHandler {
 		// String header = "Math Calculator";
 		// String footer = "This is the 2023-1 HW4 help page.";
 		String header = "Math Calculator";
-		String footer = "\nThis is the 2023-1 HW4 help page.\n\n";
+		String footer = "\nThis is the 2023-1 HW5 help page.\n\n";
 		formatter.printHelp("calculator", header, options, footer, true);
 	}
 }
